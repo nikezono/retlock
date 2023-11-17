@@ -1,9 +1,9 @@
-[![Actions Status](https://github.com/nikezono/ReentrantLock/workflows/MacOS/badge.svg)](https://github.com/nikezono/ReentrantLock/actions)
-[![Actions Status](https://github.com/nikezono/ReentrantLock/workflows/Windows/badge.svg)](https://github.com/nikezono/ReentrantLock/actions)
-[![Actions Status](https://github.com/nikezono/ReentrantLock/workflows/Ubuntu/badge.svg)](https://github.com/nikezono/ReentrantLock/actions)
-[![Actions Status](https://github.com/nikezono/ReentrantLock/workflows/Style/badge.svg)](https://github.com/nikezono/ReentrantLock/actions)
-[![Actions Status](https://github.com/nikezono/ReentrantLock/workflows/Install/badge.svg)](https://github.com/nikezono/ReentrantLock/actions)
-[![codecov](https://codecov.io/gh/nikezono/ReentrantLock/branch/master/graph/badge.svg)](https://codecov.io/gh/nikezono/ReentrantLock)
+[![Actions Status](https://github.com/nikezono/retlock/workflows/MacOS/badge.svg)](https://github.com/nikezono/retlock/actions)
+[![Actions Status](https://github.com/nikezono/retlock/workflows/Windows/badge.svg)](https://github.com/nikezono/retlock/actions)
+[![Actions Status](https://github.com/nikezono/retlock/workflows/Ubuntu/badge.svg)](https://github.com/nikezono/retlock/actions)
+[![Actions Status](https://github.com/nikezono/retlock/workflows/Style/badge.svg)](https://github.com/nikezono/retlock/actions)
+[![Actions Status](https://github.com/nikezono/retlock/workflows/Install/badge.svg)](https://github.com/nikezono/retlock/actions)
+[![codecov](https://codecov.io/gh/nikezono/retlock/branch/master/graph/badge.svg)](https://codecov.io/gh/nikezono/retlock)
 
 # ReTLock
 
