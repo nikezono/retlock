@@ -1,17 +1,17 @@
-#include <greeter/greeter.h>
-#include <greeter/version.h>
+#include <retlock/version.h>
 
 #include <cxxopts.hpp>
 #include <iostream>
+#include <retlock/retlock.hpp>
 #include <string>
 #include <unordered_map>
 
 auto main(int argc, char** argv) -> int {
-  const std::unordered_map<std::string, greeter::LanguageCode> languages{
-      {"en", greeter::LanguageCode::EN},
-      {"de", greeter::LanguageCode::DE},
-      {"es", greeter::LanguageCode::ES},
-      {"fr", greeter::LanguageCode::FR},
+  const std::unordered_map<std::string, retlock::LanguageCode> languages{
+      {"en", retlock::LanguageCode::EN},
+      {"de", retlock::LanguageCode::DE},
+      {"es", retlock::LanguageCode::ES},
+      {"fr", retlock::LanguageCode::FR},
   };
 
   cxxopts::Options options(*argv, "A program to welcome the world!");
@@ -36,7 +36,7 @@ auto main(int argc, char** argv) -> int {
   }
 
   if (result["version"].as<bool>()) {
-    std::cout << "Greeter, version " << GREETER_VERSION << std::endl;
+    std::cout << "ReTLock, version " << RETLOCK_VERSION << std::endl;
     return 0;
   }
 
@@ -46,8 +46,8 @@ auto main(int argc, char** argv) -> int {
     return 1;
   }
 
-  greeter::Greeter greeter(name);
-  std::cout << greeter.greet(langIt->second) << std::endl;
+  retlock::ReTLock retlock(name);
+  std::cout << retlock.greet(langIt->second) << std::endl;
 
   return 0;
 }

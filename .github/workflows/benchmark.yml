@@ -1,4 +1,4 @@
-name: Standalone
+name: Benchmark
 
 on:
   push:
@@ -26,10 +26,10 @@ jobs:
           key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
 
       - name: configure
-        run: cmake -Sstandalone -Bbuild -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -Sbenchmark -Bbuild -DCMAKE_BUILD_TYPE=Debug
 
       - name: build
         run: cmake --build build -j4
 
       - name: run
-        run: ./build/Greeter
+        run: ./build/ReTLock
