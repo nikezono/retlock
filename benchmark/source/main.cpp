@@ -80,21 +80,31 @@ template <typename LockType> void benchmark(Config c, std::string lock_name) {
   std::cout << "-------------------------" << std::endl;
 
   /* Output to CSV */
+  std::ifstream infile(c.filename);
+  bool file_exists = infile.good();
   std::fstream csv_file(c.filename, std::ios::app);
-  bool file_exists = csv_file.good();
   if (!csv_file.is_open()) {
     std::cerr << "Failed to open " << c.filename << " for writing.\n";
     return;
   }
 
   if (!file_exists) {
-    csv_file << "Version,LockType,ThreadCount,Iteration,LockAcquisitionCount,"
-                "ElapsedTime,OPS\n";
+    csv_file
+        << "Type,Version,LockType,ThreadCount,Iteration,LockAcquisitionCount,"
+           "ElapsedTime,OPS\n";
   }
 
-  csv_file << RETLOCK_VERSION << "," << lock_name << "," << c.num_threads << ","
-           << c.iteration << "," << success_count << elapsed_time << ","
-           << throughput << "\n";
+  csv_file << fmt::format("\"Sum\",{},\"{}\",{},{},{},{},{}", RETLOCK_VERSION,
+                          lock_name, c.num_threads, c.iteration, success_count,
+                          elapsed_time, throughput)
+           << std::endl;
+
+  for (int i = 0; i < c.num_threads; ++i) {
+    csv_file << fmt::format("\"ForEachThread\",{},\"{}\",{},{},{},{},{}",
+                            RETLOCK_VERSION, lock_name, i + 1, c.iteration,
+                            counters[i], elapsed_time, throughput)
+             << std::endl;
+  }
 }
 
 auto main(int argc, char** argv) -> int {

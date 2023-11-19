@@ -4,18 +4,12 @@
 #include <retlock/retlock.hpp>
 #include <string>
 
-TEST_CASE("ReTLock") {
-  using namespace retlock;
-
-  ReTLock retlock("Tests");
-
-  CHECK(retlock.greet(LanguageCode::EN) == "Hello, Tests!");
-  CHECK(retlock.greet(LanguageCode::DE) == "Hallo Tests!");
-  CHECK(retlock.greet(LanguageCode::ES) == "¡Hola Tests!");
-  CHECK(retlock.greet(LanguageCode::FR) == "Bonjour Tests!");
+TEST_CASE_TEMPLATE_DEFINE("signed integer stuff", T, test_id) {
+  T var = T();
+  --var;
+  CHECK(var == -1);
 }
 
-TEST_CASE("ReTLock version") {
-  static_assert(std::string_view(RETLOCK_VERSION) == std::string_view("1.0"));
-  CHECK(std::string(RETLOCK_VERSION) == std::string("1.0"));
-}
+TEST_CASE_TEMPLATE_INVOKE(test_id, char, short, int, long long int);
+
+TEST_CASE_TEMPLATE_APPLY(test_id, std::tuple<float, double>);
