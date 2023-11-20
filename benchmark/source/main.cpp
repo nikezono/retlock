@@ -1,5 +1,7 @@
 // Copyright @nikezono, 2023-
 #include <retlock/version.h>
+#include <retlock/retlock.hpp>
+#include <fmt/format.h>
 
 #include <chrono>
 #include <cxxopts.hpp>
@@ -7,7 +9,6 @@
 #include <iostream>
 #include <mutex>
 #include <numeric>
-#include <retlock/retlock.hpp>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -134,16 +135,13 @@ auto main(int argc, char** argv) -> int {
     c.iteration = iteration;
     while (0 < c.iteration) {
       benchmark<std::recursive_mutex>(c, "std::recursive_mutex");
+      benchmark<retlock::ReTLock>(c, "ReTLock");
+      benchmark<retlock::ReTLockNoOp>(c, "ReTLockNoOp");
+      // benchmark<retlock::ReTLockQueue>(c, "ReTLockNoOp");
       c.iteration--;
     }
     c.num_threads--;
   }
-
-  // TODO
-  // benchmark<ReLock>(num_threads, max_reentrant_count, duration);
-  // benchmark<ReLockTLS>(num_threads, max_reentrant_count, duration);
-  // benchmark<ReQuLock>(num_threads, max_reentrant_count, duration);
-  // benchmark<ReQuLockTLS>(num_threads, max_reentrant_count, duration);
 
   return 0;
 }

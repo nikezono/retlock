@@ -11,7 +11,7 @@
 /**
  * Testing Classes
  */
-#define RECURSIVE_LOCK std::recursive_mutex
+#define RECURSIVE_LOCK std::recursive_mutex, retlock::ReTLock, retlock::ReTLockNoOp
 #define NORMAL_LOCK RECURSIVE_LOCK, std::mutex
 
 /** Test cases for Exclusive Locking */

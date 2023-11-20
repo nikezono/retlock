@@ -17,6 +17,12 @@ CPMAddPackage(
 )
 
 CPMAddPackage(NAME ReTLock SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+CPMAddPackage(
+  NAME fmt
+  GIT_TAG 9.1.0
+  GITHUB_REPOSITORY fmtlib/fmt
+  OPTIONS "FMT_INSTALL YES" # create an installable target
+)
 
 # ---- Create executable ----
 
