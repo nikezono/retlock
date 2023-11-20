@@ -1,7 +1,6 @@
 // Copyright @nikezono, 2023-
-#include <retlock/version.h>
-#include <retlock/retlock.hpp>
 #include <fmt/format.h>
+#include <retlock/version.h>
 
 #include <chrono>
 #include <cxxopts.hpp>
@@ -9,6 +8,7 @@
 #include <iostream>
 #include <mutex>
 #include <numeric>
+#include <retlock/retlock.hpp>
 #include <string>
 #include <thread>
 #include <unordered_map>
