@@ -20,10 +20,9 @@ struct Config {
   size_t duration;
 };
 
-template <typename LockType>
-void reentrant_worker(LockType* lock, size_t* shared_variable,
-                      std::chrono::steady_clock::time_point start_time,
-                      Config c, int* local_counter) {
+template <typename LockType> void reentrant_worker(LockType* lock, size_t* shared_variable,
+                                                   std::chrono::steady_clock::time_point start_time,
+                                                   Config c, int* local_counter) {
   std::this_thread::sleep_until(start_time);
   auto end_time = start_time + std::chrono::seconds(c.duration);
   while (std::chrono::steady_clock::now() < end_time) {
@@ -45,15 +44,13 @@ template <typename LockType> void benchmark(Config c, std::string lock_name) {
   LockType lock;
   size_t shared_variable = 0;
 
-  auto start_time
-      = std::chrono::steady_clock::now()
-        + std::chrono::seconds(1);  // Wait 1 second for starting up all threads
+  auto start_time = std::chrono::steady_clock::now()
+                    + std::chrono::seconds(1);  // Wait 1 second for starting up all threads
 
   /* Benchmarking */
   for (int i = 0; i < c.num_threads; ++i) {
     threads.emplace_back([&, i] {
-      reentrant_worker<LockType>(&lock, &shared_variable, start_time, c,
-                                 &counters[i]);
+      reentrant_worker<LockType>(&lock, &shared_variable, start_time, c, &counters[i]);
     });
   }
 
@@ -61,22 +58,20 @@ template <typename LockType> void benchmark(Config c, std::string lock_name) {
     t.join();
   }
   auto end_time = std::chrono::steady_clock::now();
-  auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                          end_time - start_time)
-                          .count();
+  auto elapsed_time
+      = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
   /* Calculate Results */
   auto success_count = std::accumulate(counters.begin(), counters.end(), 0);
-  size_t throughput = static_cast<size_t>(std::round(
-      static_cast<double>(success_count) / static_cast<double>(elapsed_time)));
+  size_t throughput = static_cast<size_t>(
+      std::round(static_cast<double>(success_count) / static_cast<double>(elapsed_time)));
 
   std::cout << "--- Benchmark results ---" << std::endl;
-  std::cout << "Config: lock " << lock_name << " thread " << c.num_threads
-            << ", iteration " << c.iteration << std::endl;
+  std::cout << "Config: lock " << lock_name << " thread " << c.num_threads << ", iteration "
+            << c.iteration << std::endl;
   std::cout << "Total lock acquisition count: " << success_count << std::endl;
   std::cout << "Elapsed time: " << elapsed_time << " milliseconds" << std::endl;
-  std::cout << "Throughput: " << throughput << " iterations/second"
-            << std::endl;
+  std::cout << "Throughput: " << throughput << " iterations/second" << std::endl;
   std::cout << "-------------------------" << std::endl;
 
   /* Output to CSV */
@@ -89,20 +84,19 @@ template <typename LockType> void benchmark(Config c, std::string lock_name) {
   }
 
   if (!file_exists) {
-    csv_file
-        << "Type,Version,LockType,ThreadCount,Iteration,LockAcquisitionCount,"
-           "ElapsedTime,OPS\n";
+    csv_file << "Version,LockType,Type,ThreadCount,ThreadID,Iteration,"
+                "LockAcquisitionCount,"
+                "ElapsedTime,OPS\n";
   }
 
-  csv_file << fmt::format("\"Sum\",{},\"{}\",{},{},{},{},{}", RETLOCK_VERSION,
-                          lock_name, c.num_threads, c.iteration, success_count,
-                          elapsed_time, throughput)
+  csv_file << fmt::format("{},\"{}\",\"Sum\",{},{},{},{},{},{}", RETLOCK_VERSION, lock_name,
+                          c.num_threads, 0, c.iteration, success_count, elapsed_time, throughput)
            << std::endl;
 
   for (int i = 0; i < c.num_threads; ++i) {
-    csv_file << fmt::format("\"ForEachThread\",{},\"{}\",{},{},{},{},{}",
-                            RETLOCK_VERSION, lock_name, i + 1, c.iteration,
-                            counters[i], elapsed_time, throughput)
+    csv_file << fmt::format("{},\"{}\",\"ForEachThread\",{},{},{},{},{},{}", RETLOCK_VERSION,
+                            lock_name, c.num_threads, i + 1, c.iteration, counters[i], elapsed_time,
+                            throughput)
              << std::endl;
   }
 }
