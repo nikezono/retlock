@@ -25,7 +25,7 @@ namespace retlock {
     void lock() {
       for (size_t i = 0; !try_lock(); ++i) {
         if (i % 10 == 0) std::this_thread::yield();
-        if (i % 100 == 0) std::this_thread::sleep_for(std::chrono::microseconds(1 + i / 100));
+        if (i % 100 == 0) std::this_thread::sleep_for(std::chrono::nanoseconds(1 + i / 100));
         // NOTE: glibc uses exponential backoff here
       }
     }
@@ -38,7 +38,7 @@ namespace retlock {
       if (desired.counter == 0) {
         desired.owner_tid = 0;
       }
-      lock_.store(desired, std::memory_order_relaxed);
+      lock_.store(desired, std::memory_order_release);
     }
 
     bool try_lock() {
@@ -46,7 +46,7 @@ namespace retlock {
       if (is_already_locked(current)) {
         auto desired = current;
         desired.counter++;
-        lock_.store(desired, std::memory_order_relaxed);
+        lock_.store(desired);
         return true;
       }
 
@@ -58,7 +58,7 @@ namespace retlock {
       desired.owner_tid = getThreadId();
       desired.counter = 1;
 
-      auto success = lock_.compare_exchange_weak(current, desired);
+      auto success = lock_.compare_exchange_weak(current, desired, std::memory_order_acquire);
       return success;
     }
 

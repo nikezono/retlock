@@ -30,11 +30,13 @@ template <typename LockType> void reentrant_worker(LockType* lock, size_t* share
   while (std::chrono::steady_clock::now() < end_time) {
     for (int i = 0; i < c.iteration; ++i) {
       lock->lock();
+    }
       // access shared variables in the critical section
       // See LBench (Lock Cohorting, Dice et al, PPoPP'12) for more details
       (*shared_variable)++;
-      lock->unlock();
-    }
+      for (int i = 0; i < c.iteration; ++i) {
+        lock->unlock();
+      }
     (*local_counter)++;
   }
 }
