@@ -1,8 +1,6 @@
 [![Actions Status](https://github.com/nikezono/retlock/workflows/MacOS/badge.svg)](https://github.com/nikezono/retlock/actions)
-[![Actions Status](https://github.com/nikezono/retlock/workflows/Windows/badge.svg)](https://github.com/nikezono/retlock/actions)
 [![Actions Status](https://github.com/nikezono/retlock/workflows/Ubuntu/badge.svg)](https://github.com/nikezono/retlock/actions)
 [![Actions Status](https://github.com/nikezono/retlock/workflows/Style/badge.svg)](https://github.com/nikezono/retlock/actions)
-[![Actions Status](https://github.com/nikezono/retlock/workflows/Install/badge.svg)](https://github.com/nikezono/retlock/actions)
 [![codecov](https://codecov.io/gh/nikezono/retlock/graph/badge.svg?token=9PBB727WMZ)](https://codecov.io/gh/nikezono/retlock)
 
 # ReTLock
