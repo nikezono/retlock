@@ -18,7 +18,7 @@ cmake -S all -B build
 cmake --build build
 
 # run benchmark
-./build/benchmark/ReTLock --help
+./build/benchmark/ReTLockBench --help
 # run tests
 ./build/test/ReTLockTests
 
