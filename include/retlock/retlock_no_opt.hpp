@@ -25,6 +25,8 @@ namespace retlock {
     void lock() {
       for (size_t i = 0; !try_lock(); ++i) {
         if (i % 10 == 0) std::this_thread::yield();
+        if (i % 100 == 0) std::this_thread::sleep_for(std::chrono::microseconds(1 + i / 100));
+        // NOTE: glibc uses exponential backoff here
       }
     }
 
