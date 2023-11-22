@@ -9,6 +9,7 @@
 #include <mutex>
 #include <numeric>
 #include <retlock/retlock.hpp>
+#include <retlock/retlock_no_opt.hpp>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -136,7 +137,7 @@ auto main(int argc, char** argv) -> int {
     while (0 < c.iteration) {
       benchmark<std::recursive_mutex>(c, "std::recursive_mutex");
       benchmark<retlock::ReTLock>(c, "ReTLock");
-      benchmark<retlock::ReTLockNoOp>(c, "ReTLockNoOp");
+      benchmark<retlock::ReTLockNoOpt>(c, "ReTLockNoOpt");
       // benchmark<retlock::ReTLockQueue>(c, "ReTLockNoOp");
       c.iteration--;
     }

@@ -1,14 +1,12 @@
 #pragma once
 
 #include <atomic>
+#include <bitset>
 #include <cassert>
-#include <new>
 #include <thread>
+#include <unordered_map>
 
 namespace retlock {
-
-  constexpr std::size_t cache_line_size() { return std::hardware_destructive_interference_size; }
-
   /**
    * @brief An optimized implementation of reentrant locking.
    * Compatible with std::recurisve_mutex.
@@ -18,36 +16,35 @@ namespace retlock {
    *   - unlock()
    *   - try_lock()
    */
-  class ReTLock {
+  class ReTLockNoOpt {
   public:
-    ReTLock() : lock_(), counter_(0) {}
-    ReTLock(const ReTLock&) = delete;
-    ReTLock& operator=(const ReTLock&) = delete;
+    ReTLockNoOpt() : lock_() {}
+    ReTLockNoOpt(const ReTLockNoOpt&) = delete;
+    ReTLockNoOpt& operator=(const ReTLockNoOpt&) = delete;
 
     void lock() {
       for (size_t i = 0; !try_lock(); ++i) {
         if (i % 10 == 0) std::this_thread::yield();
-        // NOTE: glibc uses exponential backoff here
       }
     }
 
     void unlock() {
       auto current = lock_.load(std::memory_order_relaxed);
       assert(is_already_locked(current));
-
-      assert(0 < current.counter);
-      assert(0 < counter_);
-      counter_--;
-      if (0 < counter_) return;
-      lock_.store({}, std::memory_order_release);
+      auto desired = current;
+      desired.counter--;
+      if (desired.counter == 0) {
+        desired.owner_tid = 0;
+      }
+      lock_.store(desired, std::memory_order_relaxed);
     }
 
     bool try_lock() {
       auto current = lock_.load(std::memory_order_relaxed);
       if (is_already_locked(current)) {
-        assert(0 < counter_);
-        assert(0 < current.counter);
-        counter_++;
+        auto desired = current;
+        desired.counter++;
+        lock_.store(desired, std::memory_order_relaxed);
         return true;
       }
 
@@ -55,10 +52,11 @@ namespace retlock {
       assert(current.counter == 0);
       assert(current.owner_tid == 0);
 
-      Container desired{getThreadId(), 1};
+      auto desired = current;
+      desired.owner_tid = getThreadId();
+      desired.counter = 1;
 
-      auto success = lock_.compare_exchange_weak(current, desired, std::memory_order_acquire);
-      if (success) counter_ = 1;
+      auto success = lock_.compare_exchange_weak(current, desired);
       return success;
     }
 
@@ -67,11 +65,9 @@ namespace retlock {
       uint32_t owner_tid;
       uint32_t counter;
       Container() : owner_tid(0), counter(0) {}
-      Container(uint32_t o, uint32_t c) : owner_tid(o), counter(c) {}
     };
 
-    alignas(cache_line_size()) std::atomic<Container> lock_;
-    alignas(cache_line_size()) size_t counter_;
+    std::atomic<Container> lock_;
 
     static std::atomic<uint32_t> thread_id_allocator_;
 
@@ -86,5 +82,5 @@ namespace retlock {
     static_assert(std::atomic<Container>::is_always_lock_free, "This class is not lock-free");
   };
 
-  std::atomic<uint32_t> ReTLock::thread_id_allocator_(1);
+  std::atomic<uint32_t> ReTLockNoOpt::thread_id_allocator_(1);
 }  // namespace retlock
