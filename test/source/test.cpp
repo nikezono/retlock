@@ -5,14 +5,16 @@
 #include <future>
 #include <mutex>
 #include <retlock/retlock.hpp>
-#include <retlock/retlock_no_opt.hpp>
+#include <retlock/retlock_same_cacheline.hpp>
 #include <string>
 #include <tuple>
 
 /**
  * Testing Classes
  */
-#define RECURSIVE_LOCK std::recursive_mutex, retlock::ReTLock, retlock::ReTLockNoOpt
+#define RECURSIVE_LOCK                                                             \
+  std::recursive_mutex, retlock::ReTLock, retlock::ReTLockAFS, retlock::ReTLockAS, \
+      retlock::ReTLockNormal
 #define NORMAL_LOCK RECURSIVE_LOCK, std::mutex
 
 /** Test cases for Exclusive Locking */

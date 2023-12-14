@@ -16,17 +16,24 @@ namespace retlock {
    *   - unlock()
    *   - try_lock()
    */
-  class ReTLockNoOpt {
+  template <bool AdaptiveSleep = false> class ReTLockSameCacheline {
   public:
-    ReTLockNoOpt() : lock_() {}
-    ReTLockNoOpt(const ReTLockNoOpt&) = delete;
-    ReTLockNoOpt& operator=(const ReTLockNoOpt&) = delete;
+    ReTLockSameCacheline() : lock_() {}
+    ReTLockSameCacheline(const ReTLockSameCacheline&) = delete;
+    ReTLockSameCacheline& operator=(const ReTLockSameCacheline&) = delete;
 
     void lock() {
       for (size_t i = 0; !try_lock(); ++i) {
         if (i % 10 == 0) std::this_thread::yield();
-        if (i % 100 == 0) std::this_thread::sleep_for(std::chrono::nanoseconds(1 + i / 100));
-        // NOTE: glibc uses exponential backoff here
+
+        if (i % 100 == 0) {
+          size_t adaptive = 1;
+          if constexpr (AdaptiveSleep) {
+            adaptive = lock_.load(std::memory_order_relaxed).counter;
+          }
+          std::this_thread::sleep_for(std::chrono::nanoseconds(1 + (i / 100) * adaptive));
+          // NOTE: glibc uses exponential backoff here
+        }
       }
     }
 
@@ -84,5 +91,9 @@ namespace retlock {
     static_assert(std::atomic<Container>::is_always_lock_free, "This class is not lock-free");
   };
 
-  std::atomic<uint32_t> ReTLockNoOpt::thread_id_allocator_(1);
+  using ReTLockNormal = ReTLockSameCacheline<false>;
+  using ReTLockAS = ReTLockSameCacheline<true>;
+
+  template <> std::atomic<uint32_t> ReTLockNormal::thread_id_allocator_(1);
+  template <> std::atomic<uint32_t> ReTLockAS::thread_id_allocator_(1);
 }  // namespace retlock

@@ -9,7 +9,7 @@
 #include <mutex>
 #include <numeric>
 #include <retlock/retlock.hpp>
-#include <retlock/retlock_no_opt.hpp>
+#include <retlock/retlock_same_cacheline.hpp>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -138,8 +138,11 @@ auto main(int argc, char** argv) -> int {
     c.iteration = iteration;
     while (0 < c.iteration) {
       benchmark<std::recursive_mutex>(c, "std::recursive_mutex");
-      benchmark<retlock::ReTLock>(c, "ReTLock");
-      benchmark<retlock::ReTLockNoOpt>(c, "ReTLockNoOpt");
+      benchmark<retlock::ReTLockNormal>(c, "lock");
+      benchmark<retlock::ReTLockAFS>(c, "+AFS");  // avoid false sharing
+      benchmark<retlock::ReTLockAS>(c, "+AS");    // adaptive Sleep
+      benchmark<retlock::ReTLock>(c, "+AFS,AS");
+
       // benchmark<retlock::ReTLockQueue>(c, "ReTLockNoOp");
       c.iteration--;
     }
