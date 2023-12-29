@@ -10,6 +10,7 @@
 #include <numeric>
 #include <retlock/retlock.hpp>
 #include <retlock/retlock_same_cacheline.hpp>
+#include <retlock/retlock_queue.hpp>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -142,8 +143,9 @@ auto main(int argc, char** argv) -> int {
       benchmark<retlock::ReTLockAFS>(c, "+AFS");  // avoid false sharing
       benchmark<retlock::ReTLockAS>(c, "+AS");    // adaptive Sleep
       benchmark<retlock::ReTLock>(c, "+AFS,AS");
+      benchmark<retlock::ReTLockQueue>(c, "MCS");
+      benchmark<retlock::ReTLockQueueAFS>(c, "MCS+AFS");
 
-      // benchmark<retlock::ReTLockQueue>(c, "ReTLockNoOp");
       c.iteration--;
     }
     c.num_threads--;

@@ -7,8 +7,6 @@
 
 namespace retlock {
 
-  constexpr std::size_t cache_line_size() { return 64; }
-
   /**
    * @brief An optimized implementation of reentrant locking.
    * Compatible with std::recurisve_mutex.
@@ -87,7 +85,9 @@ namespace retlock {
       Container(uint32_t o, uint32_t c, uint32_t r)
           : owner_tid(o), lockbits(c), recursive_count_metric(r) {}
     };
+    static_assert(std::atomic<Container>::is_always_lock_free, "This class is not lock-free");
 
+    static constexpr std::size_t cache_line_size() { return 64; }
     alignas(cache_line_size()) std::atomic<Container> lock_;
     alignas(cache_line_size()) size_t counter_;
     size_t counter_max_;
@@ -101,8 +101,6 @@ namespace retlock {
     inline bool is_already_locked(Container& current) const {
       return current.owner_tid == getThreadId();
     }
-
-    static_assert(std::atomic<Container>::is_always_lock_free, "This class is not lock-free");
   };
 
   using ReTLockAFS = ReTLockImpl<false>;

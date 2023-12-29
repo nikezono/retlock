@@ -6,6 +6,7 @@
 #include <mutex>
 #include <retlock/retlock.hpp>
 #include <retlock/retlock_same_cacheline.hpp>
+#include <retlock/retlock_queue.hpp>
 #include <string>
 #include <tuple>
 
@@ -14,7 +15,7 @@
  */
 #define RECURSIVE_LOCK                                                             \
   std::recursive_mutex, retlock::ReTLock, retlock::ReTLockAFS, retlock::ReTLockAS, \
-      retlock::ReTLockNormal
+      retlock::ReTLockNormal, retlock::ReTLockQueue, retlock::ReTLockQueueAFS
 #define NORMAL_LOCK RECURSIVE_LOCK, std::mutex
 
 /** Test cases for Exclusive Locking */
@@ -93,7 +94,7 @@ TEST_SUITE("Reentrant Lock"
       {
         std::unique_lock<T> ul(l);
         std::unique_lock<T> ul2(l);
-        ul2.unlock();  // locked twice, unlocked once. not yet realsed.
+        ul2.unlock();  // locked twice, unlocked once. not yet released.
         locked.store(true);
         CHECK(ul.owns_lock());
         while (!lock_failed.load()) {
