@@ -25,96 +25,83 @@ namespace retlock {
     ReTLockQueueImpl(const ReTLockQueueImpl&) = delete;
     ReTLockQueueImpl& operator=(const ReTLockQueueImpl&) = delete;
 
-    static constexpr uint32_t LOCKED = 1;
-    static constexpr uint32_t UNLOCKED = 0;
+    static constexpr bool LOCKED = true;
+    static constexpr bool UNLOCKED = false;
 
-    void lock() { try_lock(true); }
+    void lock() {
+      auto result = try_lock(false);
+      assert(result == true);
+    }
 
     void unlock() {
       auto* my_node = getMyQNode();
-      assert(my_node->lock_.load() == LOCKED);
       assert(my_node->counter_ > 0);
       my_node->counter_--;
       if (my_node->counter_ > 0) return;
 
-      my_node->lock_.store(UNLOCKED);
       auto* next = my_node->next_.load();
-      if (next == nullptr) return;
-
+      if (next == nullptr) {
+        auto* expected = my_node;
+        // my_node may be the tail_. set tail to nullptr
+        if (tail_.compare_exchange_strong(expected, nullptr)) {
+          return;
+        }
+        // someone has interleaved.
+        while (next == nullptr) {
+          next = my_node->next_.load(std::memory_order_relaxed);
+        }
+      }
+      assert(next != nullptr);
       next->waiting_.store(false);
     }
 
-    bool try_lock(bool wait = false) {
+    bool try_lock(bool no_wait = true) {
       auto* my_node = getMyQNode();
 
-      if (my_node->lock_.load() == LOCKED) {
+      if (0 < my_node->counter_) {
+        assert(my_node->waiting_.load() == false);
         my_node->counter_++;
+        if constexpr (AdaptiveSleep) {
+          auto* next = my_node->next_.load(std::memory_order_relaxed);
+          if (next != nullptr) {
+            next->waiting_.store(my_node->counter_, std::memory_order_relaxed);
+          }
+        }
         return true;
       }
 
-      my_node->lock_.store(LOCKED);
       my_node->counter_ = 1;
       my_node->next_.store(nullptr);
       my_node->waiting_.store(true);
 
-    lock:
       auto* current = tail_.load();
+      assert(current != my_node);
 
-      // queue is empty
-      if (current == nullptr) {
-        auto success = (tail_.compare_exchange_strong(current, my_node));
-        if (success) {
-          return true;
-        } else {
-          if (!wait) {
-            my_node = new (&my_node) QNode();
-            return false;
-          }
-          goto lock;
-        }
-      }
-      if (!wait) {
-        my_node = new (&my_node) QNode();
+      // queue is not empty
+      if (current != nullptr && no_wait) {
+        my_node->reset();
         return false;
       }
 
       // enqueue
-      bool queued = false;
-      while (!queued) {
-        auto* next = current->next_.load();
-        while (next != nullptr) {
-          current = next;
-          next = current->next_.load();
-        }
-        assert(current != nullptr);
-        assert(next == nullptr);
-
-        queued = current->next_.compare_exchange_weak(next, my_node);
+      auto* pred = tail_.exchange(my_node);
+      if (pred != nullptr) {
+        pred->next_.store(my_node);
+      } else {
+        my_node->waiting_.store(false);
+        return true;
       }
 
       // wait for unlock
-      assert(wait);
-      size_t i = 0;
-      auto* my_metric = getMyMetric();
-      const size_t adaptive = *my_metric;  // TODO
       for (;;) {
-        auto waiting = my_node->waiting_.load();
-        if (!waiting) {
-          if constexpr (AdaptiveSleep) {
-            uint32_t new_metric = (*my_metric + i / 2);
-            *getMyMetric() = new_metric;
+        auto waiting = my_node->waiting_.load(std::memory_order_relaxed);
+        if (!waiting) return true;
+        if constexpr (AdaptiveSleep)
+          if (1 < waiting) {
+            // lock holder is in reentrant mode.
+            // it seems that I should wait for a while.
+            std::this_thread::yield();
           }
-          return true;
-        }
-        if (i % 10 == 0) std::this_thread::yield();
-        if (i % 100 == 0) {
-          if constexpr (AdaptiveSleep) {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(1 + (i / 100) * adaptive));
-          } else {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(1 + i / 100));
-          }
-        }
-        i++;
       }
     }
 
@@ -123,10 +110,10 @@ namespace retlock {
 
     struct QNode {
       alignas(cache_line_size()) std::atomic<QNode*> next_;
-      std::atomic<bool> lock_;
-      std::atomic<bool> waiting_;
+      std::atomic<uint32_t> waiting_;
       alignas(cache_line_size()) size_t counter_;
-      QNode() : next_(nullptr), lock_(UNLOCKED), waiting_(false), counter_(0) {}
+      QNode() : next_(nullptr), waiting_(true), counter_(0) {}
+      void reset() { new (this) QNode(); }
     };
 
     std::atomic<QNode*> tail_;
@@ -136,10 +123,6 @@ namespace retlock {
     QNode* getMyQNode() {
       static thread_local QNode node;
       return &node;
-    }
-    size_t* getMyMetric() {
-      static thread_local size_t metric = 1;
-      return &metric;
     }
   };
 
