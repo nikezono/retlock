@@ -61,3 +61,11 @@ or
 cmake --build build --target format
 cmake --build build --target fix-format
 ```
+
+# Benchmark Result
+Here's the throughput from testing on AWS EC2 m8g.16xlarge. All implementations except `std::recursive_mutex` are in this repository, where options are varied.
+You can use `+AFS,AS` with the simplest declaration `retlock::RetLock`.
+Check out the code in the `benchmark` directory for details.
+
+<img width="868" height="547" alt="image" src="https://github.com/user-attachments/assets/1449ce43-f8b1-42bb-bd4c-e5e518a6534e" />
+
